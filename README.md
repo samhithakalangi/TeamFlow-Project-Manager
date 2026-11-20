@@ -197,3 +197,5 @@ The demo URL and walkthrough video are optional in the assignment.
 - Never commit `.env`, SQLite database files, `node_modules/` or `dist/`.
 
 See `docs/SECURITY_AUDIT.md` for the current security status and archived findings.
+## Project Demo Video
+
