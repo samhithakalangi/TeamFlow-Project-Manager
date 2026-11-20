@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: TeamFlow Project Manager API
+  version: 1.0.0
+  description: REST API for managing projects, user stories, tasks and background jobs.
+servers:
+  - url: http://localhost:4000/api
+tags:
+  - name: Projects
+  - name: Stories
+  - name: Tasks
+  - name: Background jobs
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  service: { type: string, example: "teamflow-api" }
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List projects with roll-up counts
+      responses:
+        '200':
+          description: Project list
+    post:
+      tags: [Projects]
+      summary: Create a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                description: { type: string, maxLength: 2000 }
+                owner: { type: string, maxLength: 80 }
+      responses:
+        '201': { description: Project created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+
+  /projects/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, minimum: 1 }
+        description: Positive integer project ID
+    get:
+      tags: [Projects]
+      summary: Get project with nested stories and tasks
+      responses:
+        '200': { description: Project hierarchy }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Projects]
+      summary: Update project fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                description: { type: string, maxLength: 2000 }
+                owner: { type: string, maxLength: 80 }
+                status: { type: string, enum: [active, completed, archived] }
+      responses:
+        '200': { description: Updated project }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+    delete:
+      tags: [Projects]
+      summary: Delete project and its descendants
+      responses:
+        '204': { description: Deleted }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/stories:
+    post:
+      tags: [Stories]
+      summary: Create a story inside a project
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: integer, minimum: 1 }
+          description: Positive integer project ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, minLength: 2, maxLength: 160 }
+                description: { type: string, maxLength: 2000 }
+                acceptanceCriteria: { type: string, maxLength: 2000 }
+                priority: { type: string, enum: [low, medium, high, critical] }
+                status: { type: string, enum: [backlog, in_progress, review, done] }
+                assignee: { type: string, maxLength: 80 }
+      responses:
+        '201': { description: Story created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+
+  /stories/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, minimum: 1 }
+        description: Positive integer story ID
+    patch:
+      tags: [Stories]
+      summary: Update a story
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, minLength: 2, maxLength: 160 }
+                description: { type: string, maxLength: 2000 }
+                acceptanceCriteria: { type: string, maxLength: 2000 }
+                priority: { type: string, enum: [low, medium, high, critical] }
+                status: { type: string, enum: [backlog, in_progress, review, done] }
+                assignee: { type: string, maxLength: 80 }
+                sort_order: { type: integer, minimum: 0 }
+      responses:
+        '200': { description: Updated story }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+    delete:
+      tags: [Stories]
+      summary: Delete story and tasks
+      responses:
+        '204': { description: Deleted }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /stories/{storyId}/tasks:
+    post:
+      tags: [Tasks]
+      summary: Create a task under a story
+      parameters:
+        - in: path
+          name: storyId
+          required: true
+          schema: { type: integer, minimum: 1 }
+          description: Positive integer story ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, minLength: 2, maxLength: 160 }
+                description: { type: string, maxLength: 2000 }
+                status: { type: string, enum: [todo, in_progress, done] }
+                assignee: { type: string, maxLength: 80 }
+                dueDate: { type: string, format: date, nullable: true }
+      responses:
+        '201': { description: Task created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+
+  /tasks/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, minimum: 1 }
+        description: Positive integer task ID
+    patch:
+      tags: [Tasks]
+      summary: Update a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, minLength: 2, maxLength: 160 }
+                description: { type: string, maxLength: 2000 }
+                status: { type: string, enum: [todo, in_progress, done] }
+                assignee: { type: string, maxLength: 80 }
+                dueDate: { type: string, format: date, nullable: true }
+      responses:
+        '200': { description: Updated task }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+    delete:
+      tags: [Tasks]
+      summary: Delete a task
+      responses:
+        '204': { description: Deleted }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{id}/reports:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, minimum: 1 }
+        description: Positive integer project ID
+    post:
+      tags: [Background jobs]
+      summary: Queue an asynchronous project report
+      responses:
+        '202': { description: Report job accepted }
+        '200': { description: Active report job already exists }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { description: Too many requests }
+
+  /jobs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, minimum: 1 }
+        description: Positive integer job ID
+    get:
+      tags: [Background jobs]
+      summary: Check background job status
+      responses:
+        '200': { description: Job state and retry information }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{id}/activity:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, minimum: 1 }
+        description: Positive integer project ID
+    get:
+      tags: [Projects]
+      summary: List recent project activity
+      responses:
+        '200': { description: Activity entries }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: "Invalid ID parameter. Must be a positive integer."
+
+  responses:
+    BadRequest:
+      description: Bad request (validation failure, invalid ID, malformed JSON, or unknown fields)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Target resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    PayloadTooLarge:
+      description: Request payload exceeds the maximum 1MB limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
