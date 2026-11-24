@@ -127,16 +127,6 @@ The report endpoint responds with **202 Accepted** and a job ID instead of doing
 - The sample frontend uses lightweight polling for job status. WebSockets/SSE can replace it if live updates become necessary.
 - Add automated unit/integration tests and CI before production deployment.
 
-## Suggested manual test
-
-1. Create a project.
-2. Add two user stories with different priorities.
-3. Add multiple tasks under each story.
-4. Change story and task statuses; observe progress and activity.
-5. Generate a report; verify the job moves from queued to completed and a report entry appears.
-6. Delete a story and confirm its tasks are removed.
-7. Restart the server and confirm the SQLite data remains.
-
 ## Project structure
 
 ```text
@@ -160,9 +150,7 @@ teamflow-project-manager/
 └── vite.config.js
 ```
 
-## License
 
-For educational and portfolio use. Add a license file if redistributing under specific terms.
 
 ## AI usage
 
@@ -176,25 +164,13 @@ AI assistance was used to help draft and review implementation ideas, React form
 - Add stronger job leases and idempotency for robust multi-instance background processing.
 - Add audit trails, accessibility review and team notifications.
 
-## Submission checklist
-
-- [ ] Publish this project to a GitHub repository (required; cannot be completed from the ZIP).
-- [ ] Run `npm install`, `npm run build`, and `npm run dev` locally.
-- [ ] Verify project, story and task creation, editing, status changes and deletion using temporary data.
-- [ ] Verify report generation and activity updates, including after restarting the API.
-- [ ] Check Swagger API docs at `http://localhost:4000/api/docs`.
-- [ ] Do not publish `.env`, SQLite data files, or real user information.
-
-The demo URL and walkthrough video are optional in the assignment.
-
 ## Current authentication and security
 
 - Users can register, log in and log out; passwords are hashed using bcryptjs.
 - SQLite stores sessions, with HttpOnly session cookies (Secure in production).
 - Authentication middleware, login throttling, CSRF checks, Helmet headers and validation are implemented.
 - Automatically created legacy/demo accounts use random undisclosed passwords, not shared default credentials. Existing database users are not reset by this change.
-- This internship prototype is not certified production-ready. Review CSRF header handling, authorization and deployment security before public exposure.
-- Never commit `.env`, SQLite database files, `node_modules/` or `dist/`.
+
 
 See `docs/SECURITY_AUDIT.md` for the current security status and archived findings.
 ## Project Demo Video
